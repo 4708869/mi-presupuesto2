@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Presupuesto</title>
+
+<style>
+:root {
+  --verde: #168568;
+  --fondo: #f3f7f5;
+  --texto: #24352f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+header {
+  background: var(--verde);
+  color: white;
+  padding: 25px 18px;
+  text-align: center;
+}
+
+header h1 { margin: 0 0 8px; }
+header p { margin: 0; }
+
+main {
+  width: min(1000px, 94%);
+  margin: 24px auto;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.tarjeta, .panel {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 3px 12px #183c3010;
+}
+
+.tarjeta p { margin: 0 0 12px; color: #63746d; }
+.tarjeta h2 { margin: 0; font-size: 25px; }
+.ingresos h2 { color: #168568; }
+.gastos h2 { color: #d95757; }
+
+.panel { margin-bottom: 20px; }
+
+h3 { margin-top: 0; }
+
+form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+input, select, button {
+  font: inherit;
+  padding: 11px;
+  border-radius: 8px;
+}
+
+input, select {
+  width: 100%;
+  border: 1px solid #d5dfda;
+  background: white;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:focus, input:focus, select:focus {
+  outline: 2px solid #76b9a5;
+  outline-offset: 2px;
+}
+
+.principal {
+  background: var(--verde);
+  color: white;
+}
+
+.cancelar { background: #e8eeeb; color: #34453e; }
+
+.acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.acciones button { padding: 8px 10px; }
+
+.completo { grid-column: 1 / -1; }
+
+.movimiento {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e9efec;
+}
+
+.movimiento:last-child { border-bottom: none; }
+
+.movimiento small {
+  display: block;
+  color: #74827b;
+  margin-top: 5px;
+}
+
+.importe { font-weight: bold; white-space: nowrap; }
+.positivo { color: #168568; }
+.negativo { color: #d95757; }
+
+.barra-fondo {
+  height: 14px;
+  background: #e6ede9;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+#barra {
+  height: 100%;
+  width: 0%;
+  background: var(--verde);
+  transition: width .3s;
+}
+
+#consejo {
+  background: #eaf6f0;
+  padding: 15px;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+
+.vacio { color: #74827b; text-align: center; padding: 18px 0; }
+
+footer {
+  text-align: center;
+  padding: 18px;
+  color: #718078;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .tarjetas { grid-template-columns: 1fr; }
+  .tarjeta { padding: 16px; }
+  .tarjeta h2 { font-size: 23px; }
+  form { grid-template-columns: 1fr; }
+  .completo { grid-column: auto; }
+  .movimiento { align-items: flex-start; }
+  .acciones { margin-top: 8px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>💰 Mi Presupuesto</h1>
+  <p>Controla tu dinero y toma mejores decisiones</p>
+</header>
+
+<main>
+
+  <section class="tarjetas">
+    <div class="tarjeta ingresos">
+      <p>💚 Total de ingresos</p>
+      <h2 id="totalIngresos">0,00 €</h2>
+    </div>
+    <div class="tarjeta gastos">
+      <p>❤️ Total de gastos</p>
+      <h2 id="totalGastos">0,00 €</h2>
+    </div>
+    <div class="tarjeta">
+      <p>👛 Saldo disponible</p>
+      <h2 id="saldo">0,00 €</h2>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 id="tituloFormulario">➕ Añadir movimiento</h3>
+
+    <form id="formulario">
+      <div>
+        <label for="tipo">Tipo de movimiento</label>
+        <select id="tipo">
+          <option value="gasto">Gasto</option>
+          <option value="ingreso">Ingreso</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="concepto">Concepto</label>
+        <input id="concepto" placeholder="Ej. Compra semanal"
+          required maxlength="80">
+      </div>
+
+      <div>
+        <label for="importe">Importe (€)</label>
+        <input id="importe" type="number" min="0.01"
+          step="0.01" placeholder="Ej. 35.50" required>
+      </div>
+
+      <div>
+        <label for="categoria">Categoría</label>
+        <select id="categoria">
+          <option>Alimentación</option>
+          <option>Transporte</option>
+          <option>Vivienda</option>
+          <option>Ocio</option>
+          <option>Salud</option>
+          <option>Educación</option>
+          <option>Otros</option>
+        </select>
+      </div>
+
+      <div class="completo">
+        <button class="principal" type="submit" id="botonGuardar">
+          Guardar movimiento
+        </button>
+        <button class="cancelar" type="button" id="cancelarEdicion"
+          hidden>Cancelar edición</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3>📊 Resumen de tus gastos</h3>
+    <p id="textoGastos">Todavía no has registrado gastos.</p>
+    <div class="barra-fondo">
+      <div id="barra"></div>
+    </div>
+    <p id="porcentaje">0% de tus ingresos gastados</p>
+  </section>
+
+  <section class="panel">
+    <h3>🧠 Consejos financieros</h3>
+    <div id="consejo">
+      Registra tus ingresos y gastos para recibir consejos personalizados.
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>📋 Mis movimientos</h3>
+    <div id="lista">
+      <p class="vacio">Aún no hay movimientos registrados.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Mi Presupuesto · Una forma sencilla de cuidar tu dinero
+</footer>
+
+<script>
+const formulario = document.getElementById("formulario");
+const tipo = document.getElementById("tipo");
+const concepto = document.getElementById("concepto");
+const importe = document.getElementById("importe");
+const categoria = document.getElementById("categoria");
+
+let movimientos = [];
+let editando = null;
+
+const formato = numero =>
+  numero.toLocaleString("es-ES", {
+    style: "currency",
+    currency: "EUR"
+  });
+
+function guardarDatos() {
+  try {
+    localStorage.setItem(
+      "miPresupuestoMovimientos",
+      JSON.stringify(movimientos)
+    );
+  } catch (error) {
+    alert("No se han podido guardar los datos en este navegador.");
+  }
+}
+
+function cargarDatos() {
+  try {
+    const datos = JSON.parse(
+      localStorage.getItem("miPresupuestoMovimientos") || "[]"
+    );
+
+    if (Array.isArray(datos)) {
+      movimientos = datos.filter(m =>
+        m &&
+        Number.isSafeInteger(m.id) &&
+        ["ingreso", "gasto"].includes(m.tipo) &&
+        typeof m.concepto === "string" &&
+        typeof m.categoria === "string" &&
+        Number.isFinite(m.importe) &&
+        m.importe > 0
+      );
+    }
+  } catch (error) {
+    movimientos = [];
+  }
+}
+
+formulario.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const nombre = concepto.value.trim();
+  const cantidad = Number(importe.value);
+
+  if (!nombre || !Number.isFinite(cantidad) || cantidad <= 0) {
+    alert("Introduce un concepto y un importe válido.");
+    return;
+  }
+
+  if (editando !== null) {
+    const movimiento = movimientos.find(m => m.id === editando);
+    if (movimiento) {
+      movimiento.tipo = tipo.value;
+      movimiento.concepto = nombre;
+      movimiento.importe = Math.round(cantidad * 100) / 100;
+      movimiento.categoria = categoria.value;
+    }
+  } else {
+    movimientos.push({
+      id: Date.now(),
+      tipo: tipo.value,
+      concepto: nombre,
+      importe: Math.round(cantidad * 100) / 100,
+      categoria: categoria.value
+    });
+  }
+
+  guardarDatos();
+  cancelarEdicion();
+  actualizar();
+});
+
+function editar(id) {
+  const m = movimientos.find(item => item.id === id);
+  if (!m) return;
+
+  editando = id;
+  tipo.value = m.tipo;
+  concepto.value = m.concepto;
+  importe.value = m.importe.toFixed(2);
+  categoria.value = m.categoria;
+
+  document.getElementById("tituloFormulario").textContent =
+    "✏️ Corregir movimiento";
+  document.getElementById("botonGuardar").textContent =
+    "Guardar cambios";
+  document.getElementById("cancelarEdicion").hidden = false;
+
+  document.getElementById("tituloFormulario")
+    .scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function cancelarEdicion() {
+  editando = null;
+  formulario.reset();
+
+  document.getElementById("tituloFormulario").textContent =
+    "➕ Añadir movimiento";
+  document.getElementById("botonGuardar").textContent =
+    "Guardar movimiento";
+  document.getElementById("cancelarEdicion").hidden = true;
+}
+
+document.getElementById("cancelarEdicion")
+  .addEventListener("click", cancelarEdicion);
+
+function eliminar(id) {
+  if (!confirm("¿Seguro que quieres eliminar este movimiento?")) {
+    return;
+  }
+
+  movimientos = movimientos.filter(m => m.id !== id);
+
+  if (editando === id) cancelarEdicion();
+
+  guardarDatos();
+  actualizar();
+}
+
+function actualizar() {
+  const ingresos = movimientos
+    .filter(m => m.tipo === "ingreso")
+    .reduce((suma, m) => suma + m.importe, 0);
+
+  const gastos = movimientos
+    .filter(m => m.tipo === "gasto")
+    .reduce((suma, m) => suma + m.importe, 0);
+
+  const saldo = ingresos - gastos;
+
+  document.getElementById("totalIngresos").textContent =
+    formato(ingresos);
+
+  document.getElementById("totalGastos").textContent =
+    formato(gastos);
+
+  const saldoElemento = document.getElementById("saldo");
+  saldoElemento.textContent = formato(saldo);
+  saldoElemento.style.color = saldo < 0 ? "#d95757" : "#168568";
+
+  const porcentaje = ingresos > 0 ? gastos / ingresos * 100 : 0;
+  const porcentajeVisible = Math.round(porcentaje);
+
+  document.getElementById("barra").style.width =
+    Math.min(porcentaje, 100) + "%";
+
+  document.getElementById("barra").style.background =
+    porcentaje > 80 ? "#d95757" : "#168568";
+
+  document.getElementById("textoGastos").textContent =
+    "Has gastado " + formato(gastos) +
+    " de " + formato(ingresos) + " ingresados.";
+
+  document.getElementById("porcentaje").textContent =
+    ingresos > 0
+      ? porcentajeVisible + "% de tus ingresos gastados"
+      : "Añade ingresos para calcular el porcentaje de gasto.";
+
+  const lista = document.getElementById("lista");
+  lista.replaceChildren();
+
+  if (movimientos.length === 0) {
+    const vacio = document.createElement("p");
+    vacio.className = "vacio";
+    vacio.textContent = "Aún no hay movimientos registrados.";
+    lista.appendChild(vacio);
+  }
+
+  [...movimientos].reverse().forEach(m => {
+    const fila = document.createElement("div");
+    fila.className = "movimiento";
+
+    const info = document.createElement("div");
+    const nombre = document.createElement("strong");
+    nombre.textContent = m.concepto;
+
+    const detalle = document.createElement("small");
+    detalle.textContent = m.categoria + " · " +
+      (m.tipo === "ingreso" ? "Ingreso" : "Gasto");
+
+    info.append(nombre, detalle);
+
+    const derecha = document.createElement("div");
+    derecha.style.textAlign = "right";
+
+    const cantidad = document.createElement("div");
+    cantidad.className = "importe " +
+      (m.tipo === "ingreso" ? "positivo" : "negativo");
+    cantidad.textContent =
+      (m.tipo === "ingreso" ? "+" : "−") + formato(m.importe);
+
+    const acciones = document.createElement("div");
+    acciones.className = "acciones";
+
+    const botonEditar = document.createElement("button");
+    botonEditar.className = "cancelar";
+    botonEditar.textContent = "Editar";
+    botonEditar.setAttribute("aria-label", "Editar " + m.concepto);
+    botonEditar.addEventListener("click", () => editar(m.id));
+
+    const botonEliminar = document.createElement("button");
+    botonEliminar.className = "cancelar";
+    botonEliminar.textContent = "Eliminar";
+    botonEliminar.setAttribute("aria-label", "Eliminar " + m.concepto);
+    botonEliminar.addEventListener("click", () => eliminar(m.id));
+
+    acciones.append(botonEditar, botonEliminar);
+    derecha.append(cantidad, acciones);
+    fila.append(info, derecha);
+    lista.appendChild(fila);
+  });
+
+  const consejo = document.getElementById("consejo");
+
+  if (movimientos.length === 0) {
+    consejo.textContent =
+      "Empieza anotando tus ingresos y gastos. Así podrás saber " +
+      "en qué utilizas tu dinero.";
+  } else if (saldo < 0) {
+    consejo.textContent =
+      "⚠️ Estás gastando más de lo que ingresas. Revisa los gastos " +
+      "no esenciales e intenta elaborar un presupuesto semanal.";
+  } else if (ingresos > 0 && porcentaje >= 80) {
+    consejo.textContent =
+      "🔎 Has utilizado al menos el 80% de tus ingresos. " +
+      "Revisa tus gastos y reserva una cantidad para imprevistos " +
+      "siempre que sea posible.";
+  } else if (ingresos > 0 && gastos > 0) {
+    consejo.textContent =
+      "👏 Tu saldo es positivo. Puedes fijarte una meta de ahorro, " +
+      "comparar tus gastos por categorías y apartar una cantidad " +
+      "realista cada mes.";
+  } else if (ingresos > 0) {
+    consejo.textContent =
+      "💡 Todavía no has anotado gastos. Registra tus compras " +
+      "habituales para calcular cuánto puedes ahorrar realmente.";
+  } else {
+    consejo.textContent =
+      "💡 Has registrado gastos, pero aún no ingresos. Añade " +
+      "tus ingresos para conocer tu saldo y planificar tu ahorro.";
+  }
+}
+
+cargarDatos();
+actualizar();
+</script>
+
+</body>
+</html>
